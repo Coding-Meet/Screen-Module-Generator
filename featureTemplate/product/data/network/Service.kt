@@ -4,6 +4,6 @@ import {{packageName}}.{{featureName}}.data.network.dto.{{className}}ResponseDto
 import retrofit2.http.GET
 
 interface {{className}}Service {
-    @GET("products")
+    @GET("{{featureName}}s")
     suspend fun get{{className}}(): List<{{className}}ResponseDto>
 }

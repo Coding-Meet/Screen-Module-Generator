@@ -53,11 +53,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -68,54 +68,57 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-tasks.register("createFeature") {
+tasks.register("moveTemplateToFeature") {
+    val rootFolderName = "featureTemplate"
+
     val featureName = project.findProperty("featureName") as String?
-        ?: throw IllegalArgumentException("Feature name is required")
+        ?: error("Feature name is required. Use -PfeatureName=<name> to specify it.")
 
-    val templateType = project.findProperty("templateType") as String?
-        ?: throw IllegalArgumentException("Template Type is required")
+    val templateName = project.findProperty("templateName") as String?
+        ?: error("Template name is required. Use -PtemplateName=<name> to specify it.")
 
-
-    // Retrieve the package name from the project configuration
+    // Retrieve the base package name from the project configuration
     val basePackageName = project.android.defaultConfig.applicationId
-        ?: throw IllegalArgumentException("Base package could not be detected.")
+        ?: error("Base package could not be detected. Ensure applicationId is set in defaultConfig.")
 
-    val codeChangeVariables = mapOf(
+    // Construct the base output path for the generated files
+    val generatedFilePath = File(projectDir, "src/main/java/${basePackageName.replace(".", "/")}")
+
+    // Map of placeholders to be replaced in template files
+    val placeholders = mapOf(
         "{{packageName}}" to basePackageName,
         "{{featureName}}" to featureName.lowercase(),
         "{{className}}" to featureName.replaceFirstChar { it.titlecase(Locale.getDefault()) }
     )
 
-    val basePackageDir = File(projectDir, "src/main/java/" + basePackageName.replace(".", "/"))
-    val featureDir = File(basePackageDir, featureName.lowercase())
-
     doLast {
-        // Check if the feature directory already exists
-        require(!featureDir.exists()) { "Feature '$featureName' already exists." }
+        val featureDir = File(generatedFilePath, featureName.lowercase())
+        if (featureDir.exists()) error("Feature '$featureName' already exists at ${featureDir.path}.")
         featureDir.mkdirs()
 
-        // Template directory
-        val templateDir = File(rootDir, "featureTemplate/$templateType")
+        val templateDir = File(rootDir, "$rootFolderName/$templateName")
         check(templateDir.exists() && templateDir.isDirectory) {
             "Template directory '$templateDir' not found or is not a directory."
         }
 
-        // Copy and process template files
-        templateDir.walkTopDown().filter { it.isFile }.forEach { file ->
-            val featureFileName = "${featureName}${file.name}"
-            val targetFile = File(featureDir, "${file.relativeTo(templateDir).parent}/$featureFileName")
-            targetFile.parentFile.mkdirs()
+        // Copy and customize template files
+        templateDir.walkTopDown()
+            .filter { it.isFile }
+            .forEach { file ->
+                val relativePath = file.relativeTo(templateDir).parent ?: ""
+                val featureFileName = "${featureName}${file.name}"
+                val targetFile = File(featureDir, "$relativePath/$featureFileName")
+                targetFile.parentFile.mkdirs()
 
-            // Read file content and replace placeholders
-            var content = file.readText()
-            codeChangeVariables.forEach { (key, value) ->
-                content = content.replace(key, value)
+                // Read file content and replace placeholders
+                var content = file.readText()
+                placeholders.forEach { (key, value) ->
+                    content = content.replace(key, value)
+                }
+                targetFile.writeText(content)
+                println("Generated file: ${targetFile.path}")
             }
 
-            targetFile.writeText(content)
-            println("Generated file: $targetFile")
-        }
-
-        println("Feature '$featureName' generated successfully in $featureDir!")
+        println("Feature '$featureName' successfully generated at ${featureDir.path}.")
     }
 }
