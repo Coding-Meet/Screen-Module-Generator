@@ -14,8 +14,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun HomeScreen() {
-    // TODO: Implement the UI for HomeScreen
-
     val viewmodel = viewModel<HomeViewModel>()
     val uiState by viewmodel.uiState.collectAsState()
 
@@ -29,4 +27,5 @@ fun HomeScreen() {
             Text(text = "Click Me")
         }
     }
+
 }

@@ -14,8 +14,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun {{className}}Screen() {
-    // TODO: Implement the UI for {{className}}Screen
-
     val viewmodel = viewModel<{{className}}ViewModel>()
     val uiState by viewmodel.uiState.collectAsState()
 
@@ -29,4 +27,5 @@ fun {{className}}Screen() {
             Text(text = "Click Me")
         }
     }
+
 }

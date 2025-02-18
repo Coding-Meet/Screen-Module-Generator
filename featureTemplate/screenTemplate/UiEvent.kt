@@ -1,6 +1,5 @@
 package {{packageName}}.{{featureName}}
 
-
 sealed class {{className}}UiEvent {
-    object OnButtonClick : {{className}}UiEvent()
+    data object OnButtonClick : {{className}}UiEvent()
 }

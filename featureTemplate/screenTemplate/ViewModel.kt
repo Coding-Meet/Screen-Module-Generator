@@ -11,8 +11,8 @@ class {{className}}ViewModel : ViewModel() {
     fun handleEvent(event: {{className}}UiEvent) {
         when (event) {
             is {{className}}UiEvent.OnButtonClick -> {
-            _uiState.value = {{className}}UiState("Button Clicked!")
-        }
+                _uiState.value = {{className}}UiState("Button Clicked!")
+            }
         }
     }
 }

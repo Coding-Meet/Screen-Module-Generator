@@ -11,8 +11,8 @@ class HomeViewModel : ViewModel() {
     fun handleEvent(event: HomeUiEvent) {
         when (event) {
             is HomeUiEvent.OnButtonClick -> {
-            _uiState.value = HomeUiState("Button Clicked!")
-        }
+                _uiState.value = HomeUiState("Button Clicked!")
+            }
         }
     }
 }
