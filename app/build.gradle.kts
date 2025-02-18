@@ -122,3 +122,61 @@ tasks.register("moveTemplateToFeature") {
         println("Feature '$featureName' successfully generated at ${featureDir.path}.")
     }
 }
+
+
+tasks.register("moveFeatureToTemplate") {
+    val rootFolderName = "featureTemplate"
+
+    val featureName = project.findProperty("featureName") as String?
+        ?: error("Feature name is required. Use -PfeatureName=<name> to specify it.")
+
+    val templateName = project.findProperty("templateName") as String?
+        ?: error("Template name is required. Use -PtemplateName=<name> to specify it.")
+
+    // Retrieve the base package name from the project configuration
+    val basePackageName = project.android.defaultConfig.applicationId
+        ?: error("Base package could not be detected. Ensure applicationId is set in defaultConfig.")
+
+    val copyFilePath = projectDir.path + "/src/main/java/" + basePackageName.replace(".", "/")
+
+
+    val placeholders = mapOf(
+        basePackageName to "{{packageName}}",
+        featureName.lowercase() to "{{featureName}}",
+        featureName.replaceFirstChar { it.titlecase(Locale.getDefault()) } to "{{className}}",
+    )
+
+    doLast {
+
+        val featureDir = File(copyFilePath, featureName.lowercase())
+        val templateDir = File(rootDir, "$rootFolderName/$templateName")
+
+        if (!featureDir.exists()) {
+            throw IllegalArgumentException("Feature '$featureName' not exists.")
+        }
+        if (templateDir.exists()) {
+            throw IllegalArgumentException("Template '$templateName' already exists.")
+        }
+        val fileName = featureName.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(
+                Locale.getDefault()
+            ) else it.toString()
+        }
+        featureDir.walkTopDown().filter { it.isFile }.forEach { file ->
+
+            val findName = file.name.indexOf(fileName) + fileName.length
+            val templateFileName = file.name.substring(findName, file.name.length)
+            val targetFile = File(templateDir, templateFileName)
+            targetFile.parentFile.mkdirs()
+
+            var content = file.readText()
+            placeholders.forEach { (key, value) ->
+                content = content.replace(key, value)
+            }
+            targetFile.writeText(content)
+
+            println("Generated file: $targetFile")
+        }
+        println("Template '$featureName' generated successfully in $templateDir")
+    }
+}
